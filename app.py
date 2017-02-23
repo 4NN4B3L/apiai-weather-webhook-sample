@@ -7,6 +7,7 @@ install_aliases()
 from urllib.parse import urlparse, urlencode
 from urllib.request import urlopen, Request
 from urllib.error import HTTPError
+from datetime import datetime
 
 import json
 import os
@@ -52,6 +53,11 @@ def processRequest(req):
 def makeYqlQuery(req):
     result = req.get("result")
     parameters = result.get("parameters")
+    date = parameters.get("date")
+    if date is None:
+        return None
+    datetime_object = datetime.strptime(date, '%Y-%b-%d').date()
+    date = datetime.strftime(datetime_object, '%d %b %Y')
     city = parameters.get("geo-city")
     if city is None:
         return None
@@ -75,11 +81,16 @@ def makeWebhookResult(data):
     item = channel.get('item')
     location = channel.get('location')
     units = channel.get('units')
+    
     if (location is None) or (item is None) or (units is None):
         return {}
 
     condition = item.get('condition')
     if condition is None:
+        return {}
+    
+    forecast = channel.get('forecast')
+    if forecast is None:
         return {}
 
     # print(json.dumps(item, indent=4))
